@@ -31,9 +31,18 @@ object CLI {
             Files.createDirectories(baseFolder)
         }
 
-        Files.walkFileTree(Paths.get(input), FileWalker(baseFolder))
+        val inputPath = Paths.get(input)
+        val inputFolder = inputPath.parent
+        val fileWalker = FileWalker(inputFolder, baseFolder)
+        Files.walkFileTree(inputPath, fileWalker)
 
-        println("Input: $input")
-        println("Output: $targetFolder")
+        // TODO: Multithreading
+        val convertedClasses = fileWalker.converters.mapValues {
+            it.value.convert()
+        }
+
+        for((name, elem) in convertedClasses) {
+            println(">> $name:\n$elem")
+        }
     }
 }

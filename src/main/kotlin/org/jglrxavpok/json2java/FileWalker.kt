@@ -1,19 +1,24 @@
 package org.jglrxavpok.json2java
 
+import java.io.FileReader
 import java.io.IOException
 import java.nio.file.FileVisitResult
 import java.nio.file.FileVisitor
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
+import java.util.concurrent.ConcurrentHashMap
 
-class FileWalker(val baseFolder: Path): FileVisitor<Path> {
+class FileWalker(val baseInputFolder: Path, val baseFolder: Path): FileVisitor<Path> {
+    val converters: MutableMap<String, JsonStructureExtractor> = ConcurrentHashMap()
+
     override fun postVisitDirectory(dir: Path, exc: IOException?): FileVisitResult {
         return FileVisitResult.CONTINUE
     }
 
     override fun visitFile(file: Path, attrs: BasicFileAttributes?): FileVisitResult {
-        println(">> $file")
+        println("Discovered $file")
+        converters += file.parent.toString() to JsonStructureExtractor(FileReader(file.toFile()))
         return FileVisitResult.CONTINUE
     }
 

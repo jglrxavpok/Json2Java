@@ -11,9 +11,12 @@ repositories {
 }
 
 dependencies {
+    testCompile "org.junit.jupiter:junit-jupiter:5.4.2"
+
     implementation "org.jetbrains.kotlinx:kotlinx-cli:0.2.1"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation 'com.squareup:javapoet:1.13.0'
+    implementation "com.google.code.gson:gson:2.8.6"
 }
 
 compileKotlin {
