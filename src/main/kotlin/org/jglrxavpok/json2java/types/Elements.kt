@@ -1,46 +1,39 @@
 package org.jglrxavpok.json2java.types
 
-interface Element // TODO: code generation methods
-data class DoubleElement(val value: Double): Element
-data class StringElement(val value: String): Element
-data class NumberElement(val value: Number): Element
-data class BooleanElement(val value: Boolean): Element
-class NullElement: Element
-data class ArrayElement(val values: Array<Element>): Element {
+import com.squareup.javapoet.TypeName
+import com.squareup.javapoet.TypeSpec
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as ArrayElement
-
-        if (!values.contentEquals(other.values)) return false
-
-        return true
+interface Element {
+    fun generateCode(klass: TypeSpec.Builder, name: String) {
+        klass.addField(asType(), name)
     }
-    override fun hashCode(): Int {
-        return values.contentHashCode()
+
+    fun generateAdditional(klass: TypeSpec.Builder, name: String) {}
+
+    fun asType(): TypeName
+
+    fun nameFromType(): String {
+        return asType().toString()
+    }
+
+    fun mergeWith(unionName: String, other: Element): Element {
+        return UnionElement.merge(unionName, this, other)
     }
 }
 
-class ObjectElement: Element {
-    val properties = mutableMapOf<String, Element>()
-
-    override fun toString(): String {
-        return "Object{$properties}"
-    }
-
-    /**
-     * Merges both ObjectElements. If both objects have the same property but with different type, it will be converted to an AlternativeElement
-     * Properties that are not in both objects will be converted to OptionalElement
-     */
-    fun merge(other: ObjectElement): ObjectElement {
-        val allProperties = (properties.keys + other.properties.keys).distinct()
-        val newObject = ObjectElement()
-        for(propertyKey in allProperties) {
-            // TODO
-        }
-
-        return newObject
-    }
+class StringElement: Element {
+    override fun asType() = TypeName.get(String::class.java)
 }
+
+class NumberElement(val value: Number): Element {
+    override fun asType() = TypeName.DOUBLE // TODO
+}
+
+class BooleanElement : Element {
+    override fun asType() = TypeName.BOOLEAN
+}
+
+class NullElement: Element {
+    override fun asType() = TypeName.get(java.lang.Object::class.java)
+}
+

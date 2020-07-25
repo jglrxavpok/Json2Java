@@ -2,15 +2,12 @@ package org.jglrxavpok.json2java
 
 import java.io.FileReader
 import java.io.IOException
-import java.nio.file.FileVisitResult
-import java.nio.file.FileVisitor
-import java.nio.file.Files
-import java.nio.file.Path
+import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.concurrent.ConcurrentHashMap
 
-class FileWalker(val baseInputFolder: Path, val baseFolder: Path): FileVisitor<Path> {
-    val converters: MutableMap<String, JsonStructureExtractor> = ConcurrentHashMap()
+class FileWalker(val baseInputFolder: Path, val baseFolder: Path, val maps: List<Pair<Regex, Regex>>): FileVisitor<Path> {
+    val converters: MutableMap<String, MutableList<JsonStructureExtractor>> = ConcurrentHashMap()
 
     override fun postVisitDirectory(dir: Path, exc: IOException?): FileVisitResult {
         return FileVisitResult.CONTINUE
@@ -18,7 +15,19 @@ class FileWalker(val baseInputFolder: Path, val baseFolder: Path): FileVisitor<P
 
     override fun visitFile(file: Path, attrs: BasicFileAttributes?): FileVisitResult {
         println("Discovered $file")
-        converters += file.parent.toString() to JsonStructureExtractor(FileReader(file.toFile()))
+        val name = file.fileName.toString().substringBeforeLast(".")
+        val parentFolderKey = file.parent.toString().replace("\\", "/")
+        val list = converters.computeIfAbsent(parentFolderKey) { mutableListOf<JsonStructureExtractor>() }
+        val propertyThatAreMaps = mutableListOf<Regex>()
+        // if file path match
+        for((filePath, jsonPath) in maps) {
+            val fileKey = file.toString().replace("\\", "/")
+            if(filePath.matches(fileKey)) {
+                propertyThatAreMaps += jsonPath
+            }
+        }
+
+        list += JsonStructureExtractor(name, FileReader(file.toFile()), propertyThatAreMaps)
         return FileVisitResult.CONTINUE
     }
 
