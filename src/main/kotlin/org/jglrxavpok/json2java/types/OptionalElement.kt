@@ -6,8 +6,14 @@ import java.util.*
 data class OptionalElement(val element: Element) : Element {
 
     override fun asType() = when (element) {
-        is NumberElement -> TypeName.get(OptionalDouble::class.java) // TODO
-        is BooleanElement -> TypeName.BOOLEAN // TODO
+        is NumberElement -> {
+            when {
+                element.isDouble -> TypeName.get(OptionalDouble::class.java)
+                element.isLong -> TypeName.get(OptionalLong::class.java)
+                else -> TypeName.get(OptionalInt::class.java)
+            }
+        }
+        is BooleanElement -> TypeName.BOOLEAN
         is OptionalElement -> element.element.asType()
         else -> ParameterizedTypeName.get(ClassName.get(Optional::class.java), element.asType())
     }

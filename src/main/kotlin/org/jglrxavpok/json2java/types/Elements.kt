@@ -2,10 +2,12 @@ package org.jglrxavpok.json2java.types
 
 import com.squareup.javapoet.TypeName
 import com.squareup.javapoet.TypeSpec
+import org.jglrxavpok.json2java.escapeKeywords
+import javax.lang.model.SourceVersion
 
 interface Element {
     fun generateCode(klass: TypeSpec.Builder, name: String) {
-        klass.addField(asType(), name)
+        klass.addField(asType(), name.escapeKeywords())
     }
 
     fun generateAdditional(klass: TypeSpec.Builder, name: String) {}
@@ -26,7 +28,48 @@ class StringElement: Element {
 }
 
 class NumberElement(val value: Number): Element {
-    override fun asType() = TypeName.DOUBLE // TODO
+    val isDouble: Boolean
+    val isLong: Boolean
+
+    init {
+        when {
+            value.toDouble() != value.toLong().toDouble() -> {
+                isDouble = true
+                isLong = false
+            }
+            value.toLong() != value.toInt().toLong() -> {
+                isDouble = false
+                isLong = true
+            }
+            else -> {
+                isDouble = false
+                isLong = false
+            }
+        }
+    }
+
+    override fun asType(): TypeName {
+        return when {
+            isDouble -> TypeName.DOUBLE
+            isLong -> TypeName.LONG
+            else -> TypeName.INT
+        }
+    }
+
+    override fun mergeWith(unionName: String, other: Element): Element {
+        if(other is NumberElement) {
+            val resultIsDouble = isDouble || other.isDouble
+            val resultIsLong = isLong || other.isLong
+            if(resultIsDouble) {
+                return NumberElement(0.5)
+            }
+            if(resultIsLong) {
+                return NumberElement(Long.MAX_VALUE)
+            }
+            return NumberElement(0) // int
+        }
+        return super.mergeWith(unionName, other)
+    }
 }
 
 class BooleanElement : Element {

@@ -15,17 +15,14 @@ data class ArrayElement(val values: Array<Element>): Element {
             }
             values[0].asType()
         } else {
-            TypeName.get(Object::class.java)
+            // by default, assume that it is Strings
+            TypeName.get(String::class.java)
         }
     }
 
     val isEmpty get()= values.isEmpty()
 
     override fun asType() = ArrayTypeName.of(elementType)
-
-    override fun generateCode(klass: TypeSpec.Builder, name: String) {
-        klass.addField(asType(), name)
-    }
 
     override fun generateAdditional(klass: TypeSpec.Builder, name: String) {
         if(!isEmpty) {

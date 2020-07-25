@@ -4,6 +4,7 @@ import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
 import com.squareup.javapoet.TypeSpec
+import org.jglrxavpok.json2java.escapeKeywords
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Modifier
 
@@ -22,10 +23,10 @@ class ObjectElement(name: String): Element {
                     prop = prop.element
                 }
                 val valueType = if(prop is ObjectElement) ClassName.bestGuess("${this.name}Entry") else prop.asType()
-                klass.addField(ParameterizedTypeName.get(ClassName.get(Map::class.java), ClassName.get(String::class.java), valueType), name)
+                klass.addField(ParameterizedTypeName.get(ClassName.get(Map::class.java), ClassName.get(String::class.java), valueType), name.escapeKeywords())
             }
         } else {
-            klass.addField(ClassName.bestGuess(this.name), name)
+            klass.addField(ClassName.bestGuess(this.name), name.escapeKeywords())
         }
     }
 
@@ -54,7 +55,9 @@ class ObjectElement(name: String): Element {
             prop.generateAdditional(klass, name)
         } else {
             val nameToUse = nameFromType()
-            val subclass = toJavaSource(nameToUse)
+            val subclass = toJavaSource(nameToUse) {
+                addModifiers(Modifier.STATIC)
+            }
             klass.addType(subclass)
         }
     }
@@ -96,7 +99,7 @@ class ObjectElement(name: String): Element {
     private fun toCapitalizedCamelCase(str: String) = str.split("_").joinToString("") { it.capitalize() }
     private fun toCamelCase(str: String) = str.split("_").mapIndexed { index, s -> if(index == 0) s else s.capitalize() }.joinToString("")
 
-    fun toJavaSource(nameToUse: String = this.name): TypeSpec {
+    fun toJavaSource(nameToUse: String, mod: TypeSpec.Builder.() -> Unit = {}): TypeSpec {
         val klass = TypeSpec.classBuilder(toCapitalizedCamelCase(nameToUse))
         klass.addJavadoc("Path is: $path")
         klass.addModifiers(Modifier.FINAL, Modifier.PUBLIC)
@@ -105,6 +108,7 @@ class ObjectElement(name: String): Element {
             prop.value.generateCode(klass, name)
             prop.value.generateAdditional(klass, name)
         }
+        klass.mod()
         return klass.build()
     }
 

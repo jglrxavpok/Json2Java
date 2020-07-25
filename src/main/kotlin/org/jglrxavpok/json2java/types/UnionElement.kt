@@ -24,6 +24,9 @@ class UnionElement(val baseName: String): Element {
     }
 
     private fun append(element: Element): UnionElement {
+        if(element is OptionalElement) {
+            return append(element.element)
+        }
         if(element is UnionElement) {
             for(sub in element.alternatives) {
                 append(sub)
@@ -39,7 +42,7 @@ class UnionElement(val baseName: String): Element {
         return this
     }
 
-    private fun generateUnionClass() = TypeSpec.classBuilder(baseName.capitalize())
+    private fun generateUnionClass() = TypeSpec.classBuilder(asType())
         .apply {
             for(alt in alternatives) {
                 alt.generateCode(this, "${alt.nameFromType()}Version")
@@ -47,7 +50,7 @@ class UnionElement(val baseName: String): Element {
         }
         .build()
 
-    override fun asType() = ClassName.bestGuess(baseName.capitalize())
+    override fun asType() = ClassName.bestGuess(baseName.capitalize()+"Union")
 
     override fun generateAdditional(klass: TypeSpec.Builder, name: String) {
         klass.addType(generateUnionClass())

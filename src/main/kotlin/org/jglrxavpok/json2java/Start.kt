@@ -101,7 +101,7 @@ object Start {
     }
 
     private fun writeObject(baseFolder: Path, targetFolder: Path, elem: ObjectElement, basePackage: String = "") {
-        val source = elem.toJavaSource()
+        val source = elem.toJavaSource(elem.name)
         var packageName = baseFolder.relativize(targetFolder).toString().replace("\\", "/").replace("/", ".")
         if(basePackage.isNotBlank()) {
             packageName = "$basePackage.$packageName"
