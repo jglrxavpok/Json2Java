@@ -45,7 +45,7 @@ class UnionElement(val baseName: String): Element {
     private fun generateUnionClass() = TypeSpec.classBuilder(asType())
         .apply {
             for(alt in alternatives) {
-                alt.generateCode(this, "${alt.nameFromType()}Version")
+                alt.generateCode(this, "${alt.nameFromType().substringAfterLast(".").decapitalize()}Version")
             }
         }
         .build()
