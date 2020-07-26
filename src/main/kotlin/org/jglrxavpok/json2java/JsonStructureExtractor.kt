@@ -7,7 +7,7 @@ import org.jglrxavpok.json2java.types.*
 import java.io.Reader
 import java.util.regex.Matcher
 
-class JsonStructureExtractor(val name: String, val reader: Reader, val maps: List<Regex>) {
+class JsonStructureExtractor(val name: String, val reader: Reader, val maps: List<Regex>, val selfReferencing: List<Regex>) {
 
     fun convert(): ObjectElement {
         val gson = Gson()
@@ -56,6 +56,9 @@ class JsonStructureExtractor(val name: String, val reader: Reader, val maps: Lis
         element.path = path
         if(maps.any { it.matches(path) }) {
             element.markAsMap()
+        }
+        if(selfReferencing.any { it.matches(path) }) {
+            element.markAsSelfReferencing()
         }
         return element
     }

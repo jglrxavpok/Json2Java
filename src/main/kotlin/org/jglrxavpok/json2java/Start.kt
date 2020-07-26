@@ -15,6 +15,7 @@ object Start {
               recurse: Boolean,
               packageName: String,
               mapsFile: String,
+              selfReferencingFile: String,
               foldersToFlatten: List<String>
     ) {
 
@@ -29,26 +30,12 @@ object Start {
             Files.createDirectories(baseFolder)
         }
 
-        val mapsFilePath = Paths.get(mapsFile)
-        val maps = mutableListOf<Pair<Regex, Regex>>()
-        if(Files.exists(mapsFilePath)) {
-            println("Loading map list $mapsFilePath")
-            val mapLines = Files.readAllLines(mapsFilePath)
-            for(line in mapLines) {
-                if(';' in line) {
-                    val parts = line.split(";")
-                    val file = Regex(GlobLike.toRegex(parts[0].trimEnd('/')))
-                    val property = Regex(GlobLike.toRegex(parts[1].trimEnd('/')))
-                    maps += file to property
-                }
-            }
-        } else if(mapsFile.isNotBlank()) {
-            System.err.println("Map file $mapsFile was not found!")
-        }
+        val maps = extractPathMatchers(mapsFile)
+        val selfReferencing = extractPathMatchers(selfReferencingFile)
 
         val inputPath = Paths.get(input)
-        val inputFolder = inputPath.parent ?: Paths.get(".")
-        val fileWalker = FileWalker(inputFolder, baseFolder, maps)
+        val inputFolder = if(Files.isDirectory(inputPath)) inputPath else { inputPath.parent ?: Paths.get(".") }
+        val fileWalker = FileWalker(inputFolder, baseFolder, maps, selfReferencing)
         Files.walkFileTree(inputPath, fileWalker)
 
         // TODO: Multithreading
@@ -98,6 +85,26 @@ object Start {
             writeObject(baseFolder, p, o, packageName)
         }
 
+    }
+
+    private fun extractPathMatchers(file: String): List<Pair<Regex, Regex>> {
+        val filePath = Paths.get(file)
+        val matchers = mutableListOf<Pair<Regex, Regex>>()
+        if(Files.exists(filePath)) {
+            println("Loading map list $filePath")
+            val mapLines = Files.readAllLines(filePath)
+            for(line in mapLines) {
+                if(';' in line) {
+                    val parts = line.split(";")
+                    val file = Regex(GlobLike.toRegex(parts[0].trimEnd('/')))
+                    val property = Regex(GlobLike.toRegex(parts[1].trimEnd('/')))
+                    matchers += file to property
+                }
+            }
+        } else if(file.isNotBlank()) {
+            System.err.println("Map file $file was not found!")
+        }
+        return matchers
     }
 
     private fun writeObject(baseFolder: Path, targetFolder: Path, elem: ObjectElement, basePackage: String = "") {

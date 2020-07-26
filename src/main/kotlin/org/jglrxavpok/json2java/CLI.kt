@@ -14,8 +14,12 @@ object CLI {
         val packageName: String by parser.option(type = ArgType.String, shortName = "p", fullName = "package", description = "Name of the base package to generate").default("")
         val maps: String by parser.option(type = ArgType.String, shortName = "m", fullName = "maps",
             description = "Paths of properties which should be interpreted as maps. Format is <path/to/json.json;propA/propB/myMap>. File path can correspond to a folder to apply it to all subfiles").default("")
+        val selfReferencing: String by parser.option(type = ArgType.String, shortName = "sf", fullName = "self-refences",
+            description = "Paths of properties which should be interpreted as self-refencing. The converter will stop generation of objects with names that already appeared in the file." +
+                    "More precisely, it checks that the path contains the same part twice (eg /config/feature/config). " +
+                    "Format is <path/to/json.json;propA/propB/myMap>. File path can correspond to a folder to apply it to all subfiles").default("")
         val flatten: List<String> by parser.option(ArgType.String, shortName = "f", fullName = "flatten", description = "Flatten the hierarchy of the given folders. Only used if -g/--group is present").multiple()
         parser.parse(args)
-        Start.start(input, targetFolder, groupInFolder, recurse, packageName, maps, flatten)
+        Start.start(input, targetFolder, groupInFolder, recurse, packageName, maps, selfReferencing, flatten)
     }
 }

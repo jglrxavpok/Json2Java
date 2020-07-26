@@ -10,6 +10,7 @@ import javax.lang.model.element.Modifier
 
 class ObjectElement(name: String): Element {
     private var forceAsMap: Boolean = false
+    private var selfReferencing: Boolean = false
     var path: String = ""
     var name = toCapitalizedCamelCase(name)
         private set
@@ -44,6 +45,12 @@ class ObjectElement(name: String): Element {
     }
 
     override fun generateAdditional(klass: TypeSpec.Builder, name: String) {
+        if(selfReferencing) {
+            val partsOfPath = path.split("/")
+            if(partsOfPath.distinct().count() != partsOfPath.size) { // loop detected, abort generation
+                return
+            }
+        }
         if(shouldBeMap()) {
             var prop = properties.values.first()
             while(prop is OptionalElement) {
@@ -77,6 +84,7 @@ class ObjectElement(name: String): Element {
         val newObject = ObjectElement(name)
         newObject.path = path ?: other.path
         newObject.forceAsMap = forceAsMap || other.forceAsMap
+        newObject.selfReferencing = selfReferencing || other.selfReferencing
         for(propertyKey in allProperties) {
             if(this.properties.containsKey(propertyKey) && other.properties.containsKey(propertyKey)) {
                 val propA = this.properties[propertyKey]!!
@@ -130,5 +138,9 @@ class ObjectElement(name: String): Element {
 
     fun markAsMap() {
         forceAsMap = true
+    }
+
+    fun markAsSelfReferencing() {
+        selfReferencing = true
     }
 }
