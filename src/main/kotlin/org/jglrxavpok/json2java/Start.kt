@@ -9,16 +9,30 @@ import java.util.*
 
 object Start {
 
+    /**
+     * Starts the conversion process from the given inputs
+     *
+     * @param input file or folder to convert
+     * @param targetFolder output folder
+     * @param groupInFolder Should files in the same folder be grouped into the same class?
+     * @param recurse should subfolders be considered?
+     * @param packageName base package name to give to generated classes
+     * @param mapsFile filename of a text file with the list of json files (globs accepted) and the corresponding properties to treat as java.util.Map
+     * (format is glob_for_file;glob_for_json_path, 'glob_for_json_path' is considered starting from the root "/")
+     * @param selfReferencingFile filename of a text file with the list of json files and the corresponding properties to treat as self-referencing (see mapsFile)
+     * @param foldersToFlatten list of folders to flatten. Flattened folders will have effect only if groupInFolder is true and will consider any subfolder file as if it was in the given folder to flatten
+     * (if 'flat/' is to be flattened, json files from 'flat/a/', and 'flat/other/' will be treated as if they were in 'flat/')
+     */
     fun start(input: String,
               targetFolder: String,
               groupInFolder: Boolean,
-              recurse: Boolean,
+              recurse: Boolean, // TODO: actually use
               packageName: String,
               mapsFile: String,
               selfReferencingFile: String,
               foldersToFlatten: List<String>
     ) {
-
+        // TODO: split up
         if(!Files.exists(Paths.get(input))) {
             throw FileNotFoundException("Input '$input' does not exist!")
         }
@@ -87,6 +101,11 @@ object Start {
 
     }
 
+    /**
+     * From a filename, read the lines of text and split it by semicolon
+     * If a semicolon is present, left part of the line is a glob for the json files to affect,
+     * right part is a glob for the json object to affect
+     */
     private fun extractPathMatchers(file: String): List<Pair<Regex, Regex>> {
         val filePath = Paths.get(file)
         val matchers = mutableListOf<Pair<Regex, Regex>>()

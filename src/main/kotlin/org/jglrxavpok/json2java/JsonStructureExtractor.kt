@@ -7,6 +7,10 @@ import org.jglrxavpok.json2java.types.*
 import java.io.Reader
 import java.util.regex.Matcher
 
+/**
+ * From a Reader, JsonStructureExtractor will extract an ObjectElement representing the underlying JSON object
+ * It will also generate property paths and check if they require special treatment
+ */
 class JsonStructureExtractor(val name: String, val reader: Reader, val maps: List<Regex>, val selfReferencing: List<Regex>) {
 
     fun convert(): ObjectElement {
